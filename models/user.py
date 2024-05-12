@@ -54,8 +54,9 @@ class User:
         )
         return result.modified_count
 
-    def delete(self):
-        result = get_users_collection().delete_one({"username": self.username})
+    @staticmethod
+    def delete(username):
+        result = get_users_collection().delete_one({"username": username})
         return result.deleted_count > 0
 
     def authenticate(self, password):

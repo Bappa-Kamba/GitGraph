@@ -1,6 +1,7 @@
 import unittest
 from app import app
 from models.user import User
+from models.database import get_users_collection
 
 
 class TestUserCrudOperations(unittest.TestCase):
@@ -9,26 +10,29 @@ class TestUserCrudOperations(unittest.TestCase):
         app.config['TESTING'] = True
         self.app = app.test_client()
         # Initialize app context here
+        self.test_user_data = {
+            'username': 'test_user',
+            'email': 'test@example.com',
+            'password': 'test_password'
+        }
         with app.app_context():
-            self.test_user_data = {
-                'username': 'test_user',
-                'email': 'test@example.com',
-                'password': 'test_password'
-            }
-        # Create a test user for update and delete tests
-        User.create(**self.test_user_data)
+            self.users_collection = get_users_collection()
+            # Create a test user for update and delete tests
+            User.create(**self.test_user_data)
+
 
     def tearDown(self):
-        self.users_collection.delete_many({}) # Clean up after each test
+        with app.app_context():
+            self.users_collection.delete_many({}) # Clean up after each test
 
     def test_create_user(self):
-        response = self.app.post('/api/users', json=self.test_user_data)
+        response = self.app.post('/api/users/', json=self.test_user_data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(self.users_collection.count_documents(
             {'username': 'test_user'}), 2)
 
     def test_get_user_by_username(self):
-        response = self.app.get('/api/users?username=test_user')
+        response = self.app.get('/api/users/?username=test_user')
         self.assertEqual(response.status_code, 200)
         # Check if a user exist
         self.assertEqual(len(response.json), 1)
