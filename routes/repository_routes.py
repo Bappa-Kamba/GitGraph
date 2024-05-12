@@ -64,13 +64,7 @@ def update_repository(name):
 @repository_bp.route('/<name>', methods=['DELETE'])
 def delete_repository(name):
 
-    repos = Repository.find(name=name)
-
-    if repos:
-        success = repos[0].delete()
-        if success:
-            return '', 204  # No Content
-        else:
-            return jsonify({"error": "Failed to delete repository"}), 500
+    if Repository.delete(name):
+        return '', 204  # No Content (successful delete)
     else:
-        return jsonify({"error": "Repository not found"}), 404
+        return jsonify({"error": "User not found"}), 404  # Not Found

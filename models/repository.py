@@ -26,7 +26,7 @@ class Repository:
             }
             result = get_repositories_collection().insert_one(new_repo)
             # Return Repository object
-            return cls(_id=result.inserted_id, **new_repo)
+            return cls(**new_repo)
         except DuplicateKeyError:
             return None
 
@@ -43,8 +43,9 @@ class Repository:
         )
         return result.modified_count > 0
 
-    def delete(self):
-        result = get_repositories_collection().delete_one({"_id": self._id})
+    @staticmethod
+    def delete(name):
+        result = get_repositories_collection().delete_one({'name' : name})
         return result.deleted_count > 0
 
     def to_dict(self):
