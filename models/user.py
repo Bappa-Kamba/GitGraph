@@ -5,30 +5,42 @@ from pymongo.errors import DuplicateKeyError
 
 
 class User:
-    def __init__(self, username, email, password, profile_picture_url=None, _id=None):
+    def __init__(
+            self, username,
+            email, profile_picture_url=None,
+            _id=None, github_id=None, access_token=None
+    ):
         self.username = username
         self.email = email
-        self.password = password
+        # self.password = password
         self.profile_picture_url = profile_picture_url
         self._id = _id
+        self.github_id = github_id
+        self.access_token = access_token
 
     def __str__(self):
         return self.username
 
     @staticmethod
-    def create(email, username, password, profile_picture_url=None):
-        # Hash the password before storing
-        hashed_password = bcrypt.hashpw(
-            password.encode('utf-8'), bcrypt.gensalt())
+    def create(
+            email, username, profile_picture_url=None,
+            github_id=None, access_token=None
+    ):
+        # # Hash the password before storing
+        # hashed_password = bcrypt.hashpw(
+        #     password.encode('utf-8'), bcrypt.gensalt())
 
         try:
             new_user = {
                 'username': username,
                 'email': email,
-                'password': hashed_password,  # Store hashed password
-                'profile_picture_url': profile_picture_url
+                # 'password': hashed_password,  # Store hashed password
+                'profile_picture_url': profile_picture_url,
+                'github_id': github_id,
+                'access_token': access_token
             }
             result = get_users_collection().insert_one(new_user)
+            print("Successfully commited to GV-db")
             return result.inserted_id
         except DuplicateKeyError:
             # Handle duplicate key error (username or email already exists)
@@ -43,10 +55,10 @@ class User:
 
     # Make update an instance method
     def update(self, new_data):
-        if "password" in new_data:
-            # Hash the new password if it's being updated
-            new_data['password'] = bcrypt.hashpw(
-                new_data['password'].encode('utf-8'), bcrypt.gensalt())
+        # if "password" in new_data:
+        #     # Hash the new password if it's being updated
+        #     new_data['password'] = bcrypt.hashpw(
+        #         new_data['password'].encode('utf-8'), bcrypt.gensalt())
         result = get_users_collection().update_one(
             # Use self.username to update the specific user instance
             {"username": self.username},
@@ -68,6 +80,7 @@ class User:
             "username": self.username,
             "email": self.email,
             "profile_picture_url": self.profile_picture_url,
-            "_id": str(self._id) if self._id else None
+            "_id": str(self._id) if self._id else None,
+            "github_id": self.github_id
         }
         return user_dict

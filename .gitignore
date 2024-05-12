@@ -2,3 +2,6 @@ venv/pyvenv.cfg
 venv/
 __pycache__/
 .vscode/settings.json
+adhoc.crt
+adhoc.key
+.vscode
