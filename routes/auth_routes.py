@@ -102,7 +102,6 @@ def github_logged_in(blueprint, token):
         # redirect the user to the protected page
         return redirect(urljoin(request.url_root, next_url.path))
 
-
     flash("Successfully logged in with Github", category="success")
     return False
 
@@ -114,6 +113,7 @@ def login():
         return redirect(url_for("auth.github.login"))
     else:
         return redirect(url_for('index'))
+
 
 @auth_bp.route("/logout")
 def logout():
