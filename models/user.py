@@ -30,10 +30,17 @@ class User:
             print("User Created")
         else:
             # Existing user: Update the document
+            data_dict = self.to_dict()
+            print(self._id)
+            # Remove the _id field so that it won't be updated
+            data_dict.pop('_id')
+            print("Filter query:", {"_id": self._id})
+            print("New data:", data_dict)
             result = get_users_collection().update_one(
                 {"_id": self._id},
-                {"$set": self.to_dict()}
+                {"$set": data_dict}
             )
+            print(result)
             if result.modified_count == 0:
                 raise Exception("User not updated")
             print("User Updated")

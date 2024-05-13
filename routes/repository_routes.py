@@ -1,70 +1,136 @@
 # repository_routes.py
 
-from flask import Blueprint, request, jsonify
-from models.repository import Repository
-from pymongo.errors import DuplicateKeyError
+from flask import Blueprint, jsonify, session, g, request
+import requests
+from routes.auth_routes import auth_required
 
 repository_bp = Blueprint('repository', __name__,
                           url_prefix='/api/repositories')
 
 
-@repository_bp.route('/', methods=['POST'])
-def create_repository():
-
-    data = request.get_json()
-
-    if not all(key in data for key in ('name', 'owner', 'description', 'url')):
-        return jsonify({"error": "Missing required fields"}), 400
-
-    if not isinstance(data["name"], str) or not isinstance(data["owner"], str) or not isinstance(data["description"], str) or not isinstance(data["url"], str):
-        return jsonify({"error": "Invalid data type for name, owner, description or url"}), 400
-
-    try:
-        repo = Repository.create(**data)
-        if repo:
-            return jsonify(repo.to_dict()), 201  # Created
-        else:
-            # Conflict
-            return jsonify({"error": "Repository already exists"}), 409
-    except DuplicateKeyError:
-        return jsonify({"error": "Repository already exists"}), 409  # Conflict
-
-
-@repository_bp.route('/', methods=['GET'])
+@repository_bp.route('/')
+@auth_required
 def get_repositories():
+    """
+    Fetches the repositories of the authenticated user.
+    """
+    # Ensure user is logged in via GitHub OAuth
+    if g.user is None:
+        return jsonify({"error": "Not logged in"}), 401  # Unauthorized
 
-    owner = request.args.get('owner')
-    name = request.args.get('name')
+    access_token = ''
 
-    query = {}
-    if owner:
-        query["owner"] = owner
-    if name:
-        query["name"] = name
+    headers = {
+        # Use "Bearer" with OAuth tokens
+        'Authorization': f'Bearer {access_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    params = {
+        "visibility": "all",
+        "affiliation": "owner,collaborator,organization_member",
+        "per_page": 100
+    }
 
-    repositories = Repository.find(**query)
-    return jsonify([repo.to_dict() for repo in repositories]), 200
+    all_repos = []
+    page = 1
+    while True:
+        params["page"] = page
+        try:
+            response = requests.get(
+                'https://api.github.com/user/repos', headers=headers, params=params)
+            response.raise_for_status()  # Raise an exception for bad responses
+            repos = response.json()
+            all_repos.extend(repos)
+
+            # Check if no repositories were returned (end of pagination)
+            if not repos:
+                break
+            if len(repos) < 100:
+                break
+        except requests.exceptions.RequestException as e:
+            from app import app
+            app.logger.error(f"Error fetching repositories from GitHub: {e}")
+            return jsonify({"error": "Failed to fetch repositories from GitHub"}), 500
+
+        page += 1
+
+    # Extract necessary data and return as JSON
+    repositories = [
+        {
+            "name": repo['name'],
+            "owner": repo['owner']['login'],
+            "description": repo['description'],
+            "url": repo['html_url'],
+            "updated_at": repo["updated_at"]
+        }
+        for repo in all_repos
+    ]
+
+    return jsonify(repositories), 200
 
 
-@repository_bp.route('/<name>', methods=['PUT'])
-def update_repository(name):
-    data = request.get_json()
-    repos = Repository.find(name=name)
+@repository_bp.route('/<owner>/<repo>/commits', methods=['GET'])
+@auth_required
+def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
+    """
+    Fetches commits for a specific repository.
+    """
+    if g.user is None:
+        return jsonify({"error": "Not logged in"}), 401  # Unauthorized
 
-    if repos:
-        repo = repos[0]
-        if repo.update(data):
-            return jsonify({"message": "Repository updated successfully"}), 200
-        else:
-            return jsonify({"error": "Repository not updated"}), 500
-    else:
-        return jsonify({"error": "Repository not found"}), 404
+    access_token = session['github_token']
 
+    # Date Filtering (Optional)
+    since = request.args.get('since')
+    until = request.args.get('until')
 
-@repository_bp.route('/<name>', methods=['DELETE'])
-def delete_repository(name):
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+    params = {
+        'per_page': 100  # Fetch up to 100 commits per page
+    }
+    if since:
+        params['since'] = since
+    if until:
+        params['until'] = until
 
-    if Repository.delete(name):
-        return '', 204  # No Content (successful delete)
-    else:
-        return jsonify({"error": "User not found"}), 404  # Not Found
+    all_commits = []
+    page = 1
+    while True:
+        params["page"] = page
+        try:
+            response = requests.get(
+                f'https://api.github.com/repos/{owner}/{repo}/commits', headers=headers, params=params)
+            response.raise_for_status()
+
+            commits = response.json()
+            all_commits.extend(commits)
+
+            if not commits:
+                break
+            if len(commits) < 100:
+                break
+        except requests.exceptions.RequestException as e:
+            from app import app
+            app.logger.error(f"Error fetching commits: {e}")
+            return jsonify({"error": "Failed to fetch commits from GitHub"}), response.status_code
+
+        page += 1
+
+    # ... (Error handling for API rate limits or other issues) ...
+
+    # Extract and process the data (author, date, message, additions, deletions, etc.)
+    commits_data = []
+    for commit in all_commits:
+        commit_data = {
+            "sha": commit['sha'],
+            "author": commit['commit']['author']['name'],
+            "date": commit['commit']['author']['date'],
+            "message": commit['commit']['message'],
+            # ... (extract other relevant data as needed)
+        }
+        commits_data.append(commit_data)
+
+    return jsonify(commits_data), 200

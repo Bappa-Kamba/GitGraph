@@ -13,12 +13,12 @@ class TestUserCrudOperations(unittest.TestCase):
         self.test_user_data = {
             'username': 'test_user',
             'email': 'test@example.com',
-            'password': 'test_password'
         }
         with app.app_context():
             self.users_collection = get_users_collection()
             # Create a test user for update and delete tests
-            User.create(**self.test_user_data)
+            self.test_user = User(**self.test_user_data)
+            self.test_user.save()
 
 
     def tearDown(self):

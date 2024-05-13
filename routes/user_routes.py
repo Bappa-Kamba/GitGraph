@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models.user import User
+from routes.auth_routes import auth_required
 from pymongo.errors import DuplicateKeyError
 
 # Create a Blueprint
@@ -7,12 +8,14 @@ user_bp = Blueprint('user', __name__, url_prefix='/api/users')
 
 
 @user_bp.route('/', methods=['POST'])
+@auth_required
 def create_user():
     # (Your create_user logic from app.py goes here, with minor modifications)
     data = request.get_json()
 
     try:
-        user_id = User.create(**data)
+        user = User(**data)
+        user_id = user.save()
         if user_id:
             return jsonify({"id": str(user_id)}), 201  # Created
         else:
@@ -23,6 +26,7 @@ def create_user():
 
 
 @user_bp.route('/')
+@auth_required
 def get_users():
     from models.user import User
 
@@ -32,6 +36,7 @@ def get_users():
 
 
 @user_bp.route('/<username>', methods=['PUT'])
+@auth_required
 def update_user(username):
     from models.user import User
 
@@ -52,6 +57,7 @@ def update_user(username):
 
 
 @user_bp.route('/<username>', methods=['DELETE'])
+@auth_required
 def delete_user(username):
     from models.user import User
 
