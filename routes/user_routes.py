@@ -12,7 +12,8 @@ def create_user():
     data = request.get_json()
 
     try:
-        user_id = User.create(**data)
+        user = User(**data)
+        user_id = user.save()
         if user_id:
             return jsonify({"id": str(user_id)}), 201  # Created
         else:

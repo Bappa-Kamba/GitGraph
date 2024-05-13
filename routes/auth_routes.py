@@ -52,19 +52,13 @@ def github_logged_in(blueprint, token):
         print("Trying to get data from db")
         # Get first element because find returns a list of objects
         user = user[0]
-        # Update the token just in case it changed
-        if user.access_token == token['access_token']:
-            print("Access token is same\nAllowing access.")
-        else:
-            print("Access token is different\nUpdating access token.")
-            print(user.access_token)
-            print(token)
-            user.update({'access_token' : token['access_token']})
-            print(user.access_token)
+        
+        print(user.access_token)
+        print(token)
     user.save()  # save to database
-
     # You might want to store user data in the session here for subsequent requests
     session['user_id'] = str(user._id)
+    session['github_token'] = token['access_token']
 
     flash("Successfully logged in with Github", category="success")
     return False
