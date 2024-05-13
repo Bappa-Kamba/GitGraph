@@ -1,5 +1,4 @@
 # models/user.py
-import bcrypt
 from models.database import get_users_collection
 from pymongo.errors import DuplicateKeyError
 
@@ -21,30 +20,26 @@ class User:
     def __str__(self):
         return self.username
 
-    @staticmethod
-    def create(
-            email, username, profile_picture_url=None,
-            github_id=None, access_token=None
-    ):
-        # # Hash the password before storing
-        # hashed_password = bcrypt.hashpw(
-        #     password.encode('utf-8'), bcrypt.gensalt())
+    def save(self):
+        if self._id is None:
+            # New user: Insert into the database
+            data_dict = self.to_dict()
+            data_dict.pop('_id')  
+            result = get_users_collection().insert_one(data_dict)
+            self._id = result.inserted_id
+            print("User Created")
+        else:
+            # Existing user: Update the document
+            result = get_users_collection().update_one(
+                {"_id": self._id},
+                {"$set": self.to_dict()}
+            )
+            if result.modified_count == 0:
+                raise Exception("User not updated")
+            print("User Updated")
 
-        try:
-            new_user = {
-                'username': username,
-                'email': email,
-                # 'password': hashed_password,  # Store hashed password
-                'profile_picture_url': profile_picture_url,
-                'github_id': github_id,
-                'access_token': access_token
-            }
-            result = get_users_collection().insert_one(new_user)
-            print("Successfully commited to GV-db")
-            return result.inserted_id
-        except DuplicateKeyError:
-            # Handle duplicate key error (username or email already exists)
-            return None
+        return self
+
 
     @staticmethod
     def find(**kwargs):
@@ -53,27 +48,12 @@ class User:
         # Convert to User objects
         return [User(**user) for user in user_documents]
 
-    # Make update an instance method
-    def update(self, new_data):
-        # if "password" in new_data:
-        #     # Hash the new password if it's being updated
-        #     new_data['password'] = bcrypt.hashpw(
-        #         new_data['password'].encode('utf-8'), bcrypt.gensalt())
-        result = get_users_collection().update_one(
-            # Use self.username to update the specific user instance
-            {"username": self.username},
-            {"$set": new_data}
-        )
-        return result.modified_count
 
     @staticmethod
     def delete(username):
         result = get_users_collection().delete_one({"username": username})
         return result.deleted_count > 0
 
-    def authenticate(self, password):
-        # Compare the provided password with the stored hashed password
-        return bcrypt.checkpw(password.encode('utf-8'), self.password)
 
     def to_dict(self):
         user_dict = {

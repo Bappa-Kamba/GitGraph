@@ -41,7 +41,7 @@ def github_logged_in(blueprint, token):
 
     if not user:
         print("Creating a new entry in db")
-        user = User.create(
+        user = User(
             username=github_info['login'],
             email=github_info['email'],
             profile_picture_url=github_info['avatar_url'],
@@ -61,7 +61,7 @@ def github_logged_in(blueprint, token):
             print(token)
             user.update({'access_token' : token['access_token']})
             print(user.access_token)
-        # user.save()  # save to database
+    user.save()  # save to database
 
     # You might want to store user data in the session here for subsequent requests
     session['user_id'] = str(user._id)
