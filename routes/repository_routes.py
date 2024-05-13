@@ -1,14 +1,16 @@
 # repository_routes.py
 
-from flask import Blueprint, jsonify, session, g, request
+from flask import Blueprint, jsonify, g, request
+from utils.utils import commits_per_day, commits_per_week, commits_per_month
 import requests
+from config import GITHUB_ACCESS_TOKEN
 from routes.auth_routes import auth_required
 
 repository_bp = Blueprint('repository', __name__,
-                          url_prefix='/api/repositories')
+                          url_prefix='/api')
 
 
-@repository_bp.route('/')
+@repository_bp.route('/repositories')
 @auth_required
 def get_repositories():
     """
@@ -18,7 +20,7 @@ def get_repositories():
     if g.user is None:
         return jsonify({"error": "Not logged in"}), 401  # Unauthorized
 
-    access_token = ''
+    access_token = GITHUB_ACCESS_TOKEN
 
     headers = {
         # Use "Bearer" with OAuth tokens
@@ -69,7 +71,7 @@ def get_repositories():
     return jsonify(repositories), 200
 
 
-@repository_bp.route('/<owner>/<repo>/commits', methods=['GET'])
+@repository_bp.route('/commits', methods=['GET'])
 @auth_required
 def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
     """
@@ -78,7 +80,7 @@ def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
     if g.user is None:
         return jsonify({"error": "Not logged in"}), 401  # Unauthorized
 
-    access_token = session['github_token']
+    access_token = GITHUB_ACCESS_TOKEN
 
     # Date Filtering (Optional)
     since = request.args.get('since')
@@ -133,4 +135,19 @@ def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
         }
         commits_data.append(commit_data)
 
-    return jsonify(commits_data), 200
+    commits_by_day = {date_obj.isoformat(): count for date_obj,
+                      count in commits_per_day(commits_data).items()}
+    commits_by_week = {date_obj.isoformat(): count for date_obj,
+                       count in commits_per_week(commits_data).items()}
+    commits_by_month = {month_year: count for month_year,
+                        count in commits_per_month(commits_data).items()}
+
+    return jsonify([
+        all_commits,
+        commits_data,
+        {
+            "commits_by_day": commits_by_day,
+            "commits_by_week": commits_by_week,
+            "commits_by_month": commits_by_month,
+        }
+    ]), 200
