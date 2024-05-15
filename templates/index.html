@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Git-Graph</title>
+    <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> </head>
+<body>
+    <header>
+        <h1>GitHub Activity Visualizer</h1>
+        {% if g.user %}
+            <p>Logged in as {{ g.user.username }}</p>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}">Login with GitHub</a>
+        {% endif %}
+    </header>
+
+    <main>
+        <div id="user-info">
+            {% if g.user %}
+                <img src="{{ g.user.profile_picture_url }}" alt="User Avatar">
+            {% endif %}
+        </div>
+
+        <div id="repository-list">
+            <h2>Your Repositories</h2>
+            <ul id="repo-items"></ul>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

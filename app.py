@@ -1,4 +1,4 @@
-from flask import Flask, g, session, redirect, flash, url_for, jsonify, request
+from flask import Flask, g, session, redirect, flash, url_for, jsonify, render_template
 from functools import wraps
 from config import MONGO_URI, SECRET_KEY
 from pymongo import MongoClient
@@ -37,7 +37,7 @@ def teardown_request(exception):
 @app.route('/')
 @auth_required
 def index():
-    return 'Hello, world!'
+    return render_template('index.html')
 
 
 @app.route('/mock_login')

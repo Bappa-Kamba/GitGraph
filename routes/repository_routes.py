@@ -1,7 +1,7 @@
 # repository_routes.py
 
 from flask import Blueprint, jsonify, g, request
-from utils.utils import commits_per_day, commits_per_week, commits_per_month
+from utils.utils import commits_per_day, commits_per_week, commits_per_month, calculate_pull_request_metrics
 import requests
 from config import GITHUB_ACCESS_TOKEN
 from routes.auth_routes import auth_required
@@ -151,3 +151,63 @@ def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
             "commits_by_month": commits_by_month,
         }
     ]), 200
+
+
+@repository_bp.route('/pulls', methods=['GET'])
+@auth_required
+def get_pull_requests(owner='Gomerce', repo='GomerceBE'):
+    # Ensure user is logged in via GitHub OAuth
+    if g.user is None:
+        return jsonify({"error": "Not logged in"}), 401  # Unauthorized
+
+    access_token = GITHUB_ACCESS_TOKEN
+
+    headers = {
+        # Use "Bearer" with OAuth tokens
+        'Authorization': f'Bearer {access_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+
+    all_pulls = []
+    page = 1
+    while True:
+        try:
+            response = requests.get(
+                f'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&per_page=100&page={page}',
+                headers=headers
+            )
+            response.raise_for_status()
+            pulls = response.json()
+            print(pulls)
+            all_pulls.extend(pulls)
+
+            if len(pulls) < 100:  # if we have gotten all pulls, break the loop
+                break
+
+            page += 1
+
+        except requests.exceptions.RequestException as e:
+            from app import app
+            app.logger.error(f"Error fetching pull requests: {e}")
+            return jsonify({"error": "Failed to fetch pull requests from GitHub"}), 500
+
+    # Data Processing
+    pull_request_data = []
+    for pull in all_pulls:
+        pull_data = {
+            "number": pull['number'],
+            "title": pull['title'],
+            "state": pull['state'],
+            "created_at": pull['created_at'],
+            "merged_at": pull['merged_at'],
+            "closed_at": pull['closed_at'],
+            "author": pull['user']['login']
+        }
+        pull_request_data.append(pull_data)
+        metrics = calculate_pull_request_metrics(pull_request_data)
+
+    return jsonify({
+        "pull_requests": all_pulls,
+        "pull_request_data": pull_request_data,
+        "metrics": metrics
+    }), 200
