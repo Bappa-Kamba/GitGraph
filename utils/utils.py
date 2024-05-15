@@ -37,6 +37,15 @@ def commits_per_month(commits):
     return commit_counts
 
 
+def commits_per_author(commits):
+    """Calculates the number of commits per author."""
+    author_counts = {}
+    for commit in commits:
+        author = commit['author']
+        author_counts[author] = author_counts.get(author, 0) + 1
+    return author_counts
+
+
 def calculate_pull_request_metrics(pull_requests):
     """Calculates pull request metrics and generates a histogram of time to merge.
 

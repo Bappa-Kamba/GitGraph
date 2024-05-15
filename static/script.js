@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchRepositories();
 
     // Function to fetch and display repositories
-    async function fetchRepositories() {
+    async function fetchRepositories(page = 1) {
         try {
-            const response = await fetch('/api/repositories');
+            const response = await fetch(`/api/repositories?page=${page}`);
             const repositories = await response.json();
 
             repoList.innerHTML = ""; // Clear previous list

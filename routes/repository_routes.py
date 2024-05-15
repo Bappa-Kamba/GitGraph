@@ -33,7 +33,13 @@ def get_repositories():
         "per_page": 100
     }
 
+    # Calculate skip and limit for pagination.
+    page = int(request.args.get('page', 1))
+    per_page = int(request.args.get('per_page', 10))
+    skip = (page - 1) * per_page
+
     all_repos = []
+    all_repos_count = 0
     page = 1
     while True:
         params["page"] = page
@@ -56,18 +62,18 @@ def get_repositories():
 
         page += 1
 
-    # Extract necessary data and return as JSON
-    repositories = [
-        {
+    all_repos_count = len(all_repos)
+
+    repositories = []
+    for repo in all_repos[skip:skip+per_page]:
+        repository_data = {
             "name": repo['name'],
             "owner": repo['owner']['login'],
             "description": repo['description'],
             "url": repo['html_url'],
             "updated_at": repo["updated_at"]
         }
-        for repo in all_repos
-    ]
-
+        repositories.append(repository_data)
     return jsonify(repositories), 200
 
 
@@ -178,32 +184,43 @@ def get_pull_requests(owner='Gomerce', repo='GomerceBE'):
             )
             response.raise_for_status()
             pulls = response.json()
-            print(pulls)
             all_pulls.extend(pulls)
-
-            if len(pulls) < 100:  # if we have gotten all pulls, break the loop
+            # Check if no repositories were returned (end of pagination)
+            if not pulls:
                 break
-
-            page += 1
-
+            if len(pulls) < 100:
+                break
         except requests.exceptions.RequestException as e:
             from app import app
             app.logger.error(f"Error fetching pull requests: {e}")
             return jsonify({"error": "Failed to fetch pull requests from GitHub"}), 500
 
-    # Data Processing
+        page += 1
+
     pull_request_data = []
+
+    # Fetch additional details for each pull request
     for pull in all_pulls:
-        pull_data = {
-            "number": pull['number'],
-            "title": pull['title'],
-            "state": pull['state'],
-            "created_at": pull['created_at'],
-            "merged_at": pull['merged_at'],
-            "closed_at": pull['closed_at'],
-            "author": pull['user']['login']
-        }
-        pull_request_data.append(pull_data)
+        try:
+            response = requests.get(pull['url'], headers=headers)
+            response.raise_for_status()
+            pull_details = response.json()
+            pull_request_data.append({
+                "number": pull_details['number'],
+                "title": pull_details['title'],
+                "state": pull_details['state'],
+                "created_at": pull_details['created_at'],
+                "merged_at": pull_details['merged_at'],
+                "closed_at": pull_details['closed_at'],
+                # Handle the case where additions/deletions are not present
+                "additions": pull_details.get('additions', 0),
+                "deletions": pull_details.get('deletions', 0),
+                "user": pull_details['user']['login']
+            })
+        except requests.exceptions.RequestException as e:
+            app.logger.error(f"Error fetching pull request details: {e}")
+            return jsonify({"error": "Failed to fetch pull request details"}), 500
+        
         metrics = calculate_pull_request_metrics(pull_request_data)
 
     return jsonify({
