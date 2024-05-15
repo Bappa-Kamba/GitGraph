@@ -71,7 +71,7 @@ def get_repositories():
     return jsonify(repositories), 200
 
 
-@repository_bp.route('/commits', methods=['GET'])
+@repository_bp.route('/<owner>/<repo>/commits', methods=['GET'])
 @auth_required
 def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
     """

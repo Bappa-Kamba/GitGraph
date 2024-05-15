@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to fetch and display repositories
     async function fetchRepositories() {
         try {
-            const response = await fetch('/api/repositories/');
+            const response = await fetch('/api/repositories');
             const repositories = await response.json();
 
             repoList.innerHTML = ""; // Clear previous list
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to fetch and display commits for a repository
     async function fetchCommits(owner, repo) {
         try {
-            const response = await fetch(`/api/repositories/${owner}/${repo}/commits`);
+            const response = await fetch(`/api/${owner}/${repo}/commits`);
             const commitData = await response.json();
 
             // Extract commit information (adjust based on your data structure)
