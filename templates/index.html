@@ -3,10 +3,26 @@
 <head>
     <title>Git-Graph</title>
     <link rel="alternate icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> </head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
 <body>
     <header>
         <h1>GitHub Activity Visualizer</h1>
+        <!-- <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">GitGraph</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Repositories</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Visualizations</a>
+                    </li>
+                </ul>
+            </div>
+        </nav> -->
+
         {% if g.user %}
             <p>Logged in as {{ g.user.username }}</p>
             <a href="{{ url_for('auth.logout') }}">Logout</a>
@@ -18,14 +34,18 @@
     <main>
         <div id="user-info">
             {% if g.user %}
+                <h3> Hello {{ g.user.username }}</h3>
                 <img src="{{ g.user.profile_picture_url }}" alt="User Avatar">
             {% endif %}
         </div>
 
-        <div id="repository-list">
-            <h2>Your Repositories</h2>
-            <ul id="repo-items"></ul>
+        <div id="app">
+            <div id="error-message" style="display: none;"></div>
+            
+            <div id="repo-items"></div>
         </div>
+
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     </main>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
