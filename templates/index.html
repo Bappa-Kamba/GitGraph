@@ -5,6 +5,9 @@
     <link rel="alternate icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script> 
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
 </head>
 <body>
     <header>
@@ -32,22 +35,51 @@
     </header>
 
     <main>
-        <div id="user-info">
-            {% if g.user %}
-                <h3> Hello {{ g.user.username }}</h3>
-                <img src="{{ g.user.profile_picture_url }}" alt="User Avatar">
-            {% endif %}
-        </div>
+        <div id="app" class="container mt-4">
+            <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <div id="error-message" style="display: none;"></div>  
+            <div class="row">
 
-        <div id="app">
-            <div id="error-message" style="display: none;"></div>
-            
-            <div id="repo-items"></div>
+                <div class="col-md-3">
+                    <div class="card mb-3">
+                        <img src="{{ user_data.avatar_url }}" class="card-img-top" alt="Profile Picture">
+                        <div class="card-body">
+                            <h5 class="card-title card-name">{{ user_data.name }}</h5>
+                            <h6 class="card-username">{{ user_data.login }}</h6>
+                            <small>
+                                <a class="text-secondary link-underline-hover mr-2" href="{{ user_data.following_url }}">{{ user_data.following }} following</a> . 
+                                <a class="text-secondary link-underline-hover ml-2" href="{{ user_data.followers_url }}">{{ user_data.followers }} followers</a>
+                            </small>
+                            <p class="card-text"><a href="{{ user_data.html_url }}" target="_blank">View Profile</a></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="repository-list" class="col-md-9 row"><h4>Repositories</h4></div>
+                <div id="pagination-container"></div>
+                <div id="visualization-container" class="container mt-4">
+                    <div id="repositoryOverviewChart"></div>
+                </div>
+            </div>
         </div>
 
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     </main>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+        <div class="modal-body text-center">
+            <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+            </div>
+            <p>Fetching repository data...</p> 
+        </div>
+        </div>
+    </div>
+    </div>
 </body>
 </html>

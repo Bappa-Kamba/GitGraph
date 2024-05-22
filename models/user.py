@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError
 class User:
     def __init__(
             self, username,
-            email, profile_picture_url=None,
+            email, updated=False, profile_picture_url=None,
             _id=None, github_id=None, access_token=None
     ):
         self.username = username
@@ -16,34 +16,49 @@ class User:
         self._id = _id
         self.github_id = github_id
         self.access_token = access_token
+        self.updated = updated
 
     def __str__(self):
         return self.username
 
     def save(self):
-        if self._id is None:
-            # New user: Insert into the database
-            data_dict = self.to_dict()
-            data_dict.pop('_id')  
-            result = get_users_collection().insert_one(data_dict)
-            self._id = result.inserted_id
-            print("User Created")
-        else:
-            # Existing user: Update the document
-            data_dict = self.to_dict()
-            print(self._id)
-            # Remove the _id field so that it won't be updated
-            data_dict.pop('_id')
-            print("Filter query:", {"_id": self._id})
-            print("New data:", data_dict)
-            result = get_users_collection().update_one(
-                {"_id": self._id},
-                {"$set": data_dict}
-            )
-            print(result)
-            if result.modified_count == 0:
-                raise Exception("User not updated")
-            print("User Updated")
+        try:
+            # Check for existing user by github_id
+            existing_user = get_users_collection().find_one(
+                {"github_id": self.github_id})
+
+            # If existing user is found, update the data, otherwise insert a new user
+            if existing_user:
+                # Update the existing user
+                updated_data = self.to_dict()
+
+                # Remove the _id field so that it won't be updated
+                updated_data.pop('_id')
+
+                result = get_users_collection().update_one(
+                    {"_id": existing_user['_id']},
+                    {"$set": updated_data}
+                )
+                if result.acknowledged:
+                    if result.modified_count > 0:
+                        print("User updated successfully!")
+                    else:
+                        print("User found, but no changes were made.")
+                else:
+                    print("Error: Update command not acknowledged by the server.")
+
+            else:
+                # New user: Insert into the database
+                data_dict = self.to_dict()
+                data_dict.pop('_id')  # Remove _id field for new users
+                result = get_users_collection().insert_one(data_dict)
+                self._id = result.inserted_id
+                print("User Created")
+
+        except DuplicateKeyError as e:
+            # Handle duplicate key error (shouldn't happen with github_id)
+            print(f"Error: Duplicate key error: {e}")
+            raise
 
         return self
 

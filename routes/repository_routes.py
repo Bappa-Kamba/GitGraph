@@ -1,9 +1,8 @@
 # repository_routes.py
 
-from flask import Blueprint, jsonify, g, request
+from flask import Blueprint, jsonify, g, request, session
 from utils.utils import commits_per_day, commits_per_week, commits_per_month, calculate_pull_request_metrics
 import requests
-from config import GITHUB_ACCESS_TOKEN
 from routes.auth_routes import auth_required
 
 repository_bp = Blueprint('repository', __name__,
@@ -16,11 +15,7 @@ def get_repositories():
     """
     Fetches the repositories of the authenticated user.
     """
-    # Ensure user is logged in via GitHub OAuth
-    if g.user is None:
-        return jsonify({"error": "Not logged in"}), 401  # Unauthorized
-
-    access_token = GITHUB_ACCESS_TOKEN
+    access_token = session['github_token']
 
     headers = {
         # Use "Bearer" with OAuth tokens
@@ -30,51 +25,60 @@ def get_repositories():
     params = {
         "visibility": "all",
         "affiliation": "owner,collaborator,organization_member",
-        "per_page": 100
+        "per_page": 100  # Fetch 100 repos per page (max allowed)
     }
 
-    # Calculate skip and limit for pagination.
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
-    skip = (page - 1) * per_page
-
     all_repos = []
-    all_repos_count = 0
     page = 1
     while True:
         params["page"] = page
         try:
             response = requests.get(
                 'https://api.github.com/user/repos', headers=headers, params=params)
-            response.raise_for_status()  # Raise an exception for bad responses
+            response.raise_for_status()
             repos = response.json()
             all_repos.extend(repos)
 
-            # Check if no repositories were returned (end of pagination)
-            if not repos:
+            # Check for end of pagination or rate limit
+            if not repos or response.status_code == 403:  # Check for rate limit
                 break
-            if len(repos) < 100:
-                break
+
         except requests.exceptions.RequestException as e:
             from app import app
-            app.logger.error(f"Error fetching repositories from GitHub: {e}")
-            return jsonify({"error": "Failed to fetch repositories from GitHub"}), 500
+            error_msg = f"Error fetching repositories from GitHub: {e}"
+            if response:
+                error_msg += f" (Status code: {response.status_code}, Message: {response.text})"
+            app.logger.error(error_msg)
+            return jsonify({"error": error_msg}), 500  # More specific error
 
         page += 1
+        
+    total_repos = len(all_repos)
+    per_page = int(request.args.get('per_page', 10))
+    # Calculate total pages
+    total_pages = (total_repos + per_page - 1) // per_page
 
-    all_repos_count = len(all_repos)
+    # Extract relevant data for the current page
+    page = int(request.args.get('page', 1))
+    start_index = (page - 1) * per_page
+    end_index = start_index + per_page
+    repositories = [{
+        "name": repo['name'],
+        "owner": repo['owner']['login'],
+        "description": repo['description'],
+        "url": repo['html_url'],
+        "updated_at": repo["updated_at"],
+        # Handle case where language is None
+        "language": repo.get("language"),
+        "language_color": repo.get("language_color", "Unknown"),
+        "stargazers_count": repo.get("stargazers_count", 0),
+        "forks_count": repo.get("forks_count", 0)
+    } for repo in all_repos[start_index:end_index]]
 
-    repositories = []
-    for repo in all_repos[skip:skip+per_page]:
-        repository_data = {
-            "name": repo['name'],
-            "owner": repo['owner']['login'],
-            "description": repo['description'],
-            "url": repo['html_url'],
-            "updated_at": repo["updated_at"]
-        }
-        repositories.append(repository_data)
-    return jsonify(repositories), 200
+    return jsonify({
+        'repositories': repositories,
+        'total_pages': total_pages
+    }), 200
 
 
 @repository_bp.route('/<owner>/<repo>/commits', methods=['GET'])
@@ -82,11 +86,8 @@ def get_repositories():
 def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
     """
     Fetches commits for a specific repository.
-    """
-    if g.user is None:
-        return jsonify({"error": "Not logged in"}), 401  # Unauthorized
-
-    access_token = GITHUB_ACCESS_TOKEN
+    """    
+    access_token = session['github_token']
 
     # Date Filtering (Optional)
     since = request.args.get('since')
@@ -163,10 +164,7 @@ def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
 @auth_required
 def get_pull_requests(owner='Gomerce', repo='GomerceBE'):
     # Ensure user is logged in via GitHub OAuth
-    if g.user is None:
-        return jsonify({"error": "Not logged in"}), 401  # Unauthorized
-
-    access_token = GITHUB_ACCESS_TOKEN
+    access_token = session['github_token']
 
     headers = {
         # Use "Bearer" with OAuth tokens

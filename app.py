@@ -7,6 +7,7 @@ from routes.repository_routes import repository_bp
 from routes.auth_routes import auth_bp, auth_required
 from bson import ObjectId
 from werkzeug.serving import make_ssl_devcert
+import requests
 
 app = Flask(__name__)
 app.config['MONGO_URI'] = MONGO_URI
@@ -34,32 +35,48 @@ def teardown_request(exception):
         db.client.close()
 
 
+def get_user_data(access_token):
+    headers = {
+        'Authorization': f'token {access_token}',
+        'Accept': 'application/vnd.github.v3+json'
+    }
+
+    user_response = requests.get(
+        'https://api.github.com/user', headers=headers)
+    user_data = user_response.json()
+    return user_data
+
 @app.route('/')
 @auth_required
 def index():
-    return render_template('index.html')
+    user_data = get_user_data(session['github_token'])
+
+    return render_template(
+        'index.html',
+        user_data=user_data
+    )
 
 
-@app.route('/mock_login')
-def mock_login():
-    from models.user import User
-    # Replace with your actual test user data (from GitHub)
-    mock_user = User.find(username='Senior_Man')
+# @app.route('/mock_login')
+# def mock_login():
+#     from models.user import User
+#     # Replace with your actual test user data (from GitHub)
+#     mock_user = User.find(username='Senior_Man')
 
-    if not mock_user:
-        flash("Mock user not found in the database. Please create the user first.", "error")
-        return jsonify({"user_not_found" : "Check database for test_user"})
+#     if not mock_user:
+#         flash("Mock user not found in the database. Please create the user first.", "error")
+#         return jsonify({"user_not_found" : "Check database for test_user"})
 
-    # Get the first element of mock_user if it exists
-    session['user_id'] = str(mock_user[0]._id)
-    session['github_token'] = 'mock_token1122e'
+#     # Get the first element of mock_user if it exists
+#     session['user_id'] = str(mock_user[0]._id)
+#     session['github_token'] = 'mock_token1122e'
 
-    print(session['user_id'])
-    print(session['github_token'])
-    print(session)
+#     print(session['user_id'])
+#     print(session['github_token'])
+#     print(session)
 
-    flash("Mocked GitHub login successful", category="success")
-    return redirect(url_for("index"))
+#     flash("Mocked GitHub login successful", category="success")
+#     return redirect(url_for("index"))
 
 
 if __name__ == '__main__':

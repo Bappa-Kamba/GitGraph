@@ -1,5 +1,5 @@
 # routes/auth_routes.py
-from flask import Blueprint, redirect, url_for, session, jsonify, flash, request, g
+from flask import Blueprint, redirect, url_for, session, jsonify, flash, request, g, render_template
 from flask_dance.contrib.github import make_github_blueprint, github
 from flask_dance.consumer import oauth_authorized
 from models.user import User
@@ -54,14 +54,12 @@ def github_logged_in(blueprint, token):
         return False
 
     resp = blueprint.session.get("/user")
-    print(resp)
     if not resp.ok:
         msg = "Failed to fetch user info from GitHub."
         flash(msg, category="error")
         return False
 
     github_info = resp.json()
-    print(github_info)
     # Fetch existing user by GitHub ID from the database, or create a new User if not found
     user = User.find(github_id=github_info['id'])
 
@@ -85,7 +83,6 @@ def github_logged_in(blueprint, token):
     user.access_token = token['access_token']  # Always update the access token
     user.save()
     g.user = user
-    print(g.user)
     # You might want to store user data in the session here for subsequent requests
     session['user_id'] = str(user._id)
     session['github_token'] = token['access_token']
@@ -110,13 +107,14 @@ def github_logged_in(blueprint, token):
 def login():
     print("Flask-Dance Redirect URI:", url_for("auth.github.login"))
     if not github.authorized:
-        return redirect(url_for("auth.github.login"))
+        return render_template('login.html')
     else:
         return redirect(url_for('index'))
 
 
 @auth_bp.route("/logout")
 def logout():
-    if "user_id" in session:
-        del session["user_id"]
-    return jsonify({"message": "Logged out successfully"}), 200
+    # Clear all session data
+    session.clear()
+    flash('You have been logged out.', 'success')  # Flash a success message
+    return render_template('logout.html')

@@ -1,11 +1,13 @@
 /* General Styles */
 body {
-    font-family: sans-serif;
-    margin: 0; /* Remove default body margin */
+    font-family: "Roboto", sans-serif;   /* Use GitHub's Roboto font */
+    background-color: #f6f8fa;           /* Off-white background */
+    color: #24292e;                     /* Dark gray for primary text */
+    margin: 0;                          /* Remove default body margin */
 }
 
 header {
-    background-color: #24292f; /* GitHub dark header color */
+    background-color: #24292f;        /* GitHub dark header color */
     color: white;
     padding: 1rem;
     text-align: center;
@@ -21,37 +23,83 @@ h1, h2 {
 
 /* User Info Styling */
 #user-info {
-    display: flex; /* Arrange avatar and details horizontally */
-    align-items: center; /* Align items vertically */
+    display: flex;
+    align-items: center;
     margin-bottom: 2rem;
 }
 
 #user-info img {
-    width: 50px; /* Adjust avatar size as needed */
+    width: 50px;
     height: 50px;
     border-radius: 50%;
     margin-right: 1rem;
 }
 
 /* Repository List Styling */
-#repo-items ul {
-    list-style: none;
-    padding: 0;
+#repository-list {
+    margin-top: 20px;
 }
 
-#repo-items li {
+.card {
     border: 1px solid #ddd;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    cursor: pointer; /* Indicate that items are clickable */
-    list-style: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+    transition: box-shadow 0.2s ease; /* Smooth transition for hover */
 }
 
-#repo-items li:hover {
-    background-color: #9b861d; /* Highlight on hover */
+.card-title {
+    font-size: 16px; /* Larger font for titles */
+    font-weight: 600; /* Slightly bolder */
+    color: #24292e;  /* Dark gray for title text */
+}
+
+.card-username {
+    font-weight: lighter;
+    color: #586069; /* Medium gray for username */
+}
+
+.btn-primary {
+    background-color: #24292e; 
+    border-color: #24292e;
+    color: white; /* White text for the button */
+}
+
+/* Add your custom styles here */
+.visualization-container {
+    margin-top: 20px;
+}
+
+/* Style the repository card elements */
+.repo-card .repo-name {
+    color: #0366d6; /* GitHub blue for links */
+    text-decoration: none;
+}
+
+.repo-card .repo-name:hover {
     text-decoration: underline;
 }
 
-.visualization-container {
-    margin-top: 20px;
+.repo-card .repo-details {
+    margin-top: 10px;
+    color: #586069;  /* Medium gray for details */
+    font-size: 12px;
+}
+
+.repo-card .language-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.repo-card .star-icon,
+.repo-card .fork-icon {
+    margin: 0 5px;
+}
+
+/* Hover Effect */
+.repo-card:hover {
+    background-color: #f5f5f5; /* Light gray background on hover */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow on hover */
+    cursor: pointer;
 }
