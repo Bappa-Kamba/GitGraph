@@ -85,6 +85,7 @@ def index():
 
 if __name__ == '__main__':
     # Generate a self-signed certificate (adjust paths as needed)
-    cert, key = make_ssl_devcert('adhoc', host='localhost')
-    context = (cert, key)
-    app.run(ssl_context=context, debug=True)
+    # cert, key = make_ssl_devcert('adhoc', host='localhost')
+    # context = (cert, key)
+    # app.run(ssl_context=context, debug=True)
+    app.run(debug=True)
