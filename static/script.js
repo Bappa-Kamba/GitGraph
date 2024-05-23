@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchRepositories(page = 1) {
         $('#loadingModal').modal('show');
         try {
-            const response = await fetch(`{{ url_for('api.get_repositories') }}?page=${page}`);
+            const response = await fetch(`{{ url_for('repository.get_repositories') }}?page=${page}`);
             if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
             }
