@@ -6,19 +6,52 @@ body {
     margin: 0;                          /* Remove default body margin */
 }
 
-header {
-    background-color: #24292f;        /* GitHub dark header color */
-    color: white;
-    padding: 1rem;
-    text-align: center;
+/* Navbar Styling */
+.navbar {
+    background-color: #24292f !important; /* GitHub dark header color */
+    color: white; /* Text color for the navbar */
+    padding: 1rem 1.5rem;
 }
 
-main {
-    padding: 2rem;
+/* Styling for navbar brand */
+.navbar-brand {
+    color: white !important; /* Ensure the brand text is white */
+    font-size: 1.25rem;    /* Adjust font size as needed */
 }
 
-h1, h2 {
-    margin-bottom: 1rem;
+.navbar-brand h1 {        /* Remove the default margin for the h1 inside the brand */
+    font-size: inherit;  /* Inherit the font size from .navbar-brand */
+    margin: 0;
+}
+
+/* Styling for navbar links */
+.navbar-nav .nav-link {
+    color: #c9d1d9 !important; /* Light gray for links */
+    margin-right: 1rem;   /* Add some space between links */
+}
+
+.navbar-nav .nav-link:hover { /* Add a hover effect for the links */
+    color: white !important;
+}
+
+/* Styling for the content of the navbar (excluding the brand and toggle button) */
+.navbar #navbarContent {
+    display: flex;            /* Use Flexbox for flexible layout */
+    align-items: left;      /* Vertically align items in the center */
+    justify-content: space-between; /* Distribute space between content and buttons */
+    width: 100%;            
+}
+
+/* Styling for the lead text */
+.navbar .lead {
+    font-size: 1.1rem; 
+    margin-bottom: 0; 
+}
+
+/* Styling for the login/logout buttons */
+.navbar .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
 }
 
 /* User Info Styling */

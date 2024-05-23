@@ -1,0 +1,59 @@
+/* General Styles */
+body {
+    font-family: "Roboto", sans-serif;   /* Use GitHub's Roboto font */
+    background-color: #f6f8fa;           /* Off-white background */
+    color: #24292e;                     /* Dark gray for primary text */
+    margin: 0;                          /* Remove default body margin */
+}
+
+header {
+    background-color: #24292f;        /* GitHub dark header color */
+    color: white;
+    padding: 2rem 0;  /* Increased padding for better spacing */
+    text-align: center;
+}
+
+main {
+    padding: 2rem;
+}
+
+h1 {
+    font-size: 3rem;    /* Larger font for main heading */
+}
+
+.lead {
+    font-size: 1.25rem; /* Larger font for lead paragraph */
+    margin-bottom: 1.5rem;
+}
+
+/* Hero Section */
+.hero {
+    padding: 3rem 0;
+}
+
+/* Features Section */
+.features .feature {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.features i {
+    color: #0366d6; /* GitHub blue for icons */
+}
+
+/* Call to Action Section */
+.call-to-action {
+    background-color: #24292f;
+    color: white;
+    padding: 3rem 0;
+}
+
+.btn-primary {
+    background-color: #2ea44f; /* GitHub green for primary button */
+    border-color: #2ea44f;
+}
+
+.btn-primary:hover {
+    background-color: #2c974b; /* Slightly darker green on hover */
+    border-color: #2c974b;
+}

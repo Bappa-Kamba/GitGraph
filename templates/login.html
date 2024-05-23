@@ -2,8 +2,8 @@
 <html>
 <head>
     <title>GitGraph - Login</title>
-    <link rel="alternate icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth_styles.css') }}">
 </head>
 <body>
     <div class="container mt-4">
@@ -11,10 +11,11 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        Login with GitHub
+                        <h2 class="text-center">Welcome to GitGraph</h2>
                     </div>
                     <div class="card-body">
-                        <a href="{{ url_for('auth.github.login') }}" class="btn btn-primary btn-block">Login</a>
+                        <p class="text-center">Visualize your GitHub contributions in a whole new way.</p>
+                        <a href="{{ url_for('auth.github.login') }}" class="btn btn-primary btn-block">Login with GitHub <i class="fab fa-github"></i></a>
                     </div>
                 </div>
             </div>

@@ -10,41 +10,45 @@
 
 </head>
 <body>
-    <header>
-        <h1>GitHub Activity Visualizer</h1>
-        <!-- <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="#">GitGraph</a>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                GitHub Activity Visualizer
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button> 
+
+            <div id="navbarContent" class="collapse navbar-collapse">
+                <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Repositories</a>
+                        <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Visualizations</a>
+                        <a class="nav-link" href="/about">About Us</a>
                     </li>
                 </ul>
-            </div>
-        </nav> -->
+                <p class="lead">Unleash the power of your GitHub data.</p>
 
-        {% if g.user %}
-            <p>Logged in as {{ g.user.username }}</p>
-            <a href="{{ url_for('auth.logout') }}">Logout</a>
-        {% else %}
-            <a href="{{ url_for('auth.login') }}">Login with GitHub</a>
-        {% endif %}
-    </header>
+                {% if g.user %}
+                    <form method="POST" action="{{ url_for('auth.logout') }}" class="form-inline">
+                        <button type="submit" class="btn btn-outline-light ml-2">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary ml-auto">Login with GitHub</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
 
     <main>
         <div id="app" class="container mt-4">
-            <div id="spinner" class="spinner-border text-primary" role="status" style="display: none;">
-                <span class="sr-only">Loading...</span>
-            </div>
             <div id="error-message" style="display: none;"></div>  
             <div class="row">
-
                 <div class="col-md-3">
                     <div class="card mb-3">
-                        <img src="{{ user_data.avatar_url }}" class="card-img-top" alt="Profile Picture">
+                        <img src="{{ avatar_url }}" class="card-img-top" alt="Profile Picture">
                         <div class="card-body">
                             <h5 class="card-title card-name">{{ user_data.name }}</h5>
                             <h6 class="card-username">{{ user_data.login }}</h6>
@@ -61,6 +65,8 @@
                 <div id="pagination-container"></div>
                 <div id="visualization-container" class="container mt-4">
                     <div id="repositoryOverviewChart"></div>
+                    <div id="commit-summary"></div>
+                    <div id="commit-details"></div>
                 </div>
             </div>
         </div>
@@ -77,6 +83,18 @@
             <span class="sr-only">Loading...</span>
             </div>
             <p>Fetching repository data...</p> 
+        </div>
+        </div>
+    </div>
+    </div>
+    <div class="modal fade" id="commitloadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+        <div class="modal-body text-center">
+            <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+            </div>
+            <p>Fetching commit data...</p> 
         </div>
         </div>
     </div>

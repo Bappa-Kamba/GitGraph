@@ -1,9 +1,10 @@
 # repository_routes.py
 
-from flask import Blueprint, jsonify, g, request, session
-from utils.utils import commits_per_day, commits_per_week, commits_per_month, calculate_pull_request_metrics
+from flask import Blueprint, jsonify, request, session
+from utils.utils import commits_per_day, calculate_pull_request_metrics
 import requests
 from routes.auth_routes import auth_required
+from datetime import datetime, timedelta
 
 repository_bp = Blueprint('repository', __name__,
                           url_prefix='/api')
@@ -83,10 +84,8 @@ def get_repositories():
 
 @repository_bp.route('/<owner>/<repo>/commits', methods=['GET'])
 @auth_required
-def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
-    """
-    Fetches commits for a specific repository.
-    """    
+def get_commits(owner, repo):
+    # Retrieve from the session after OAuth
     access_token = session['github_token']
 
     # Date Filtering (Optional)
@@ -98,7 +97,7 @@ def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
         'Accept': 'application/vnd.github.v3+json'
     }
     params = {
-        'per_page': 100  # Fetch up to 100 commits per page
+        'per_page': 100
     }
     if since:
         params['since'] = since
@@ -111,53 +110,64 @@ def get_commits(owner='Bappa-Kamba', repo='Github-Visualizer'):
         params["page"] = page
         try:
             response = requests.get(
-                f'https://api.github.com/repos/{owner}/{repo}/commits', headers=headers, params=params)
+                f'https://api.github.com/repos/{owner}/{repo}/commits',
+                headers=headers,
+                params=params
+            )
             response.raise_for_status()
 
             commits = response.json()
             all_commits.extend(commits)
 
-            if not commits:
+            if not commits or response.status_code == 403:  # Check for rate limit or end of pagination
                 break
-            if len(commits) < 100:
-                break
+
         except requests.exceptions.RequestException as e:
             from app import app
-            app.logger.error(f"Error fetching commits: {e}")
-            return jsonify({"error": "Failed to fetch commits from GitHub"}), response.status_code
+            error_msg = f"Error fetching commits from GitHub: {e}"
+            if response:
+                error_msg += f" (Status code: {response.status_code}, Message: {response.text})"
+            app.logger.error(error_msg)
+            return jsonify({"error": error_msg}), 500
 
         page += 1
 
-    # ... (Error handling for API rate limits or other issues) ...
+    # Extracting relevant information from commit response
+    filled_commits_by_day = {}
 
-    # Extract and process the data (author, date, message, additions, deletions, etc.)
-    commits_data = []
+    # Get start and end dates
+    start_date = datetime.strptime(min(all_commits, key=lambda c: c['commit']['author']['date'])[
+                                   'commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').date()
+    end_date = datetime.strptime(max(all_commits, key=lambda c: c['commit']['author']['date'])[
+                                 'commit']['author']['date'], '%Y-%m-%dT%H:%M:%SZ').date()
+
+    # Create a list of all days between start and end dates
+    all_dates = [(start_date + timedelta(days=x)).strftime('%Y-%m-%d')
+                 for x in range((end_date - start_date).days + 1)]
+
+    # Fill in missing dates with zero commits
+    for date in all_dates:
+        filled_commits_by_day[date] = 0
+
+    # Populate commit counts and details
+    commit_details = []
     for commit in all_commits:
-        commit_data = {
+        # Extract YYYY-MM-DD
+        commit_date = commit['commit']['author']['date'][:10]
+        filled_commits_by_day[commit_date] += 1
+        commit_details.append({
             "sha": commit['sha'],
             "author": commit['commit']['author']['name'],
-            "date": commit['commit']['author']['date'],
+            # Extract YYYY-MM-DD
+            "date": commit_date,
             "message": commit['commit']['message'],
-            # ... (extract other relevant data as needed)
-        }
-        commits_data.append(commit_data)
+            "url": commit['html_url']
+        })
 
-    commits_by_day = {date_obj.isoformat(): count for date_obj,
-                      count in commits_per_day(commits_data).items()}
-    commits_by_week = {date_obj.isoformat(): count for date_obj,
-                       count in commits_per_week(commits_data).items()}
-    commits_by_month = {month_year: count for month_year,
-                        count in commits_per_month(commits_data).items()}
-
-    return jsonify([
-        all_commits,
-        commits_data,
-        {
-            "commits_by_day": commits_by_day,
-            "commits_by_week": commits_by_week,
-            "commits_by_month": commits_by_month,
-        }
-    ]), 200
+    return jsonify({
+        "commits_by_day": filled_commits_by_day,
+        'commit_details': commit_details
+    }), 200
 
 
 @repository_bp.route('/pulls', methods=['GET'])

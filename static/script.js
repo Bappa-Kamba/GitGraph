@@ -77,14 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Function to fetch and display commits, branches and contributors for a repository
     async function fetchAndDisplayRepoData(owner, repo) {
-        $('#loadingModal').modal('show');
+        $('#commitloadingModal').modal('show');
         try {
             const commitsResponse = await fetch(`/api/${owner}/${repo}/commits`);
             // const branchesResponse = await fetch(`/api/${owner}/${repo}/branches`);
             // const contributorsResponse = await fetch(`/api/${owner}/${repo}/contributors`);
 
             const commitData = await commitsResponse.json();
-            console.log(commitData)
             // const branchData = await branchesResponse.json();
             // const contributorData = await contributorsResponse.json();
             //Extract the necessary information from the responses to be used to render the charts
@@ -97,8 +96,79 @@ document.addEventListener('DOMContentLoaded', () => {
             errorMessage.textContent = `Error fetching or displaying repository data: ${error.message}`;
             errorMessage.style.display = 'block';
         } finally {
-            $('#loadingModal').modal('hide');
+            $('#commitloadingModal').modal('hide');
         }
+    }
+
+    function renderRepositoryOverview(repo, commitData) {
+        const commitsByDay = commitData.commits_by_day;
+        const dailyData = {
+            x: Object.keys(commitsByDay).map(dateStr => new Date(dateStr)), 
+            y: Object.values(commitsByDay), 
+            type: 'bar',
+            marker: {
+                color: '#2ca02c' // GitHub green
+            },
+            showscale: true,
+            hovertemplate: '%{y} commits on %{x}'
+        };
+
+        const layout = {
+            title: `Commits Over Time for ${repo}`,
+            height: 400, // Adjust height as needed
+            xaxis: { 
+                title: 'Date', 
+                type: 'date', 
+            }, 
+            yaxis: {
+                title: 'Number of Commits' 
+            },
+        };
+
+        Plotly.newPlot('repositoryOverviewChart', [dailyData], layout); 
+
+        // Add click event listener to the chart
+        repositoryOverviewChart.on('plotly_click', function(data) {
+            let pts = '';
+            for(let i=0; i < data.points.length; i++){
+                pts = data.points[i];
+                let date = pts.x;
+
+                // Filter commits for the clicked date
+                const commitsOnThisDay = commitData.commit_details.filter(
+                    (commit) => {
+                        // Convert Plotly's date (a JavaScript Date object) to a string in the YYYY-MM-DD format
+                        const clickedDate = new Date(date).toISOString().slice(0, 10);
+                        return commit.date === clickedDate;
+                    });
+                
+                // Update commit details container
+                const commitDetailsContainer = document.getElementById('commit-details');
+                commitDetailsContainer.innerHTML = `<h3>Commits on ${date} for ${repo}:</h3>`;
+
+                if (commitsOnThisDay.length > 0) {
+                    const commitList = document.createElement('ul');
+                    commitsOnThisDay.forEach(commit => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `<b>${commit.author}</b>: <a href="${commit.url}" target="_blank">${commit.message}</a>`;
+                        commitList.appendChild(listItem);
+                    });
+                    commitDetailsContainer.appendChild(commitList);
+                } else {
+                    commitDetailsContainer.innerHTML += '<p>No commits found for this date.</p>';
+                }
+            }
+        });
+
+        // Display highest and lowest commit days (for daily commits only)
+        const dates = Object.keys(commitsByDay);
+        const commitCounts = Object.values(commitsByDay);
+
+        const highestCommitDay = dates[commitCounts.indexOf(Math.max(...commitCounts))];
+        const lowestCommitDay = dates[commitCounts.indexOf(Math.min(...commitCounts))];
+
+        const summaryText = `Highest: ${highestCommitDay} (${Math.max(...commitCounts)} commits)`;
+        document.getElementById('commit-summary').textContent = summaryText; 
     }
 
     // Function to render pagination links

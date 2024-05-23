@@ -1,11 +1,9 @@
-from flask import Flask, g, session, redirect, flash, url_for, jsonify, render_template
-from functools import wraps
+from flask import Flask, g, session, url_for, render_template
 from config import MONGO_URI, SECRET_KEY
 from pymongo import MongoClient
 from routes.user_routes import user_bp
 from routes.repository_routes import repository_bp
 from routes.auth_routes import auth_bp, auth_required
-from bson import ObjectId
 from werkzeug.serving import make_ssl_devcert
 import requests
 
@@ -46,14 +44,20 @@ def get_user_data(access_token):
     user_data = user_response.json()
     return user_data
 
+@app.route('/landing-page')
+def landing_page():
+    return render_template('landing-page.html')
+
 @app.route('/')
 @auth_required
 def index():
     user_data = get_user_data(session['github_token'])
+    avatar_url = user_data['avatar_url'] or url_for('static', filename='default.jpg')
 
     return render_template(
         'index.html',
-        user_data=user_data
+        user_data=user_data,
+        avatar_url=avatar_url
     )
 
 

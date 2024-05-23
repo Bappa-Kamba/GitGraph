@@ -1,0 +1,9 @@
+/* Login/Logout Page Styles */
+.card-header {
+    background-color: #0366d6; /* GitHub blue for header */
+    color: white; 
+}
+.card-body p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}

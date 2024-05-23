@@ -112,7 +112,7 @@ def login():
         return redirect(url_for('index'))
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST", "GET"])
 def logout():
     # Clear all session data
     session.clear()

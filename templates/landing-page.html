@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Git-Graph</title>
+    <link rel="alternate icon" href="{{ url_for('static', filename='favicon.png') }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+</head>
+<body>
+
+    <header>
+        </header>
+
+    <main>
+        <section class="hero">
+            <div class="container text-center">
+                <h1>GitGraph</h1>
+                <h2>Discover the stories behind your code</h2>
+                <p>GitGraph transforms your GitHub repositories into stunning visualizations, revealing the patterns and insights that lie within your commits, branches, and contributions.</p>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Get Started</a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <i class="fas fa-chart-simple fa-3x"></i> 
+                            <h3>Track Commit Activity</h3>
+                            <p>See when you're most productive, identify trends in your contributions, and gain a deeper understanding of your coding habits.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <i class="fas fa-code-fork fa-3x"></i>
+                            <h3>Visualize Branch Networks</h3>
+                            <p>Understand the evolution of your projects with interactive visualizations of branches, commits, and merges.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature">
+                            <i class="fas fa-user-group fa-3x"></i>
+                            <h3>Analyze Collaborations</h3>
+                            <p>Uncover who's contributing the most, track changes over time, and visualize the dynamics of your team.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </main>
+        <footer>
+        </footer>
+</body>
+</html>
