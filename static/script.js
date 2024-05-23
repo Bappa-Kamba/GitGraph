@@ -6,12 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch repositories on page load
     fetchRepositories();
 
+
     // Function to fetch and display repositories
     async function fetchRepositories(page = 1) {
         $('#loadingModal').modal('show');
         try {
-            const apiUrl = '{{ url_for('repository.get_repositories') }}';
-            const response = await fetch(`${apiUrl}?page=${page}`);
+            const apiUrl = 'https://git-graph-aa0c3e27005c.herokuapp.com';
+            const response = await fetch(`${apiUrl}/api/repositories?page=${page}`);
             if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
             }
@@ -80,8 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchAndDisplayRepoData(owner, repo) {
         $('#commitloadingModal').modal('show');
         try {
-            const apiUrl = '{{ url_for('repository.get_commits', owner=owner, repo=repo) }}';
-            const commitsResponse = await fetch(`${apiUrl}`);
+            const apiUrl = 'https://git-graph-aa0c3e27005c.herokuapp.com';
+            const commitsResponse = await fetch(`${apiUrl}/api/${owner}/${repo}/commits`);
             // const branchesResponse = await fetch(`/api/${owner}/${repo}/branches`);
             // const contributorsResponse = await fetch(`/api/${owner}/${repo}/contributors`);
 
