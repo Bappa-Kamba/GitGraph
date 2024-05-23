@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchRepositories(page = 1) {
         $('#loadingModal').modal('show');
         try {
-            const apiUrl = `{{ url_for('repository.get_repositories') }}`;
+            const apiUrl = '{{ url_for('repository.get_repositories') }}';
             const response = await fetch(`${apiUrl}?page=${page}`);
             if (!response.ok) {
             throw new Error(`Server responded with status: ${response.status}`);
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchAndDisplayRepoData(owner, repo) {
         $('#commitloadingModal').modal('show');
         try {
-            const apiUrl = `{{ url_for('repository.get_commits', owner=owner, repo=repo) }}`;
+            const apiUrl = '{{ url_for('repository.get_commits', owner=owner, repo=repo) }}';
             const commitsResponse = await fetch(`${apiUrl}`);
             // const branchesResponse = await fetch(`/api/${owner}/${repo}/branches`);
             // const contributorsResponse = await fetch(`/api/${owner}/${repo}/contributors`);
