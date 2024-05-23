@@ -17,11 +17,19 @@ body {
 .navbar-brand {
     color: white !important; /* Ensure the brand text is white */
     font-size: 1.25rem;    /* Adjust font size as needed */
+    display: flex;         /* Use flexbox for easy alignment */
+    align-items: center;   /* Vertically align logo and text */
 }
 
 .navbar-brand h1 {        /* Remove the default margin for the h1 inside the brand */
     font-size: inherit;  /* Inherit the font size from .navbar-brand */
     margin: 0;
+}
+
+.navbar-brand img {
+    height: 30px;         /* Adjust logo height as needed */
+    width: 30px;
+    margin-right: 10px;  /* Add space between logo and text */
 }
 
 /* Styling for navbar links */
